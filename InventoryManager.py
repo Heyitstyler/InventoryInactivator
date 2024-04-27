@@ -218,4 +218,9 @@ if __name__ == "__main__":
     print("Inventory Dowloaded. Convering to CSV")
     xl_to_csv()
     print("Inactivating Unused Items")
-    compare_to_csv()
+    try:
+        compare_to_csv()
+    except Exception as e:
+        print(f"error occured {e}")
+        print("Please Restart")
+    Reset()
