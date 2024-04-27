@@ -26,7 +26,7 @@ def dlSummary(barSelect):
         options.set_preference("browser.download.manager.showWhenStarting", False)
         options.set_preference("browser.download.dir", repDL)
         options.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/x-gzip")
-        # options.add_argument("--headless")
+        options.add_argument("--headless")
 
 
         summary_driver = webdriver.Firefox(options=options)
@@ -84,14 +84,11 @@ def dlSummary(barSelect):
         log.close()
         return
 
-
 def xl_to_csv():
     global itemsCsv
     barSum = glob.glob(os.path.join(repDL, "Summary_Report*.xlsx"))[0]
 
     os.chdir(repDL)
-
-    print(barSum)
 
     df = pd.read_excel(barSum)
 
@@ -100,7 +97,6 @@ def xl_to_csv():
     ConvertCsv = Item_Names.to_csv('Item_List.csv', index=False)
 
     itemsCsv = glob.glob('Item_List.csv')
-
 
 def compare_to_csv():
         os.chdir(repDL)
@@ -162,7 +158,6 @@ def compare_to_csv():
                     changePrice = Items_driver.find_element(By.ID, 'itemPrice')
                     curPrice = changePrice.get_attribute('value')
                     priceInt = str(curPrice + '0')
-                    print (curPrice)
                     changePrice.clear()
                     changePrice.send_keys(priceInt)
                     try:
@@ -187,38 +182,40 @@ def Reset():
         os.remove(os.path.join(repDL, f))
 
 
+if __name__ == "__main__":
+    root = os.getcwd()
+    repDL = os.path.join(root, "reportdownloads")
+    barDB = os.path.join(root, "barDB")
 
-root = os.getcwd()
-repDL = os.path.join(root, "reportdownloads")
-barDB = os.path.join(root, "barDB")
+    bars = pd.read_csv(os.path.join(barDB, "bardb.csv"))
 
-bars = pd.read_csv(os.path.join(barDB, "bardb.csv"))
+    while True:
+        barSelect = input("What bar are we working with: ")
 
-while True:
-    barSelect = input("What bar are we working with: ")
+        userRow = bars[bars["user"] == barSelect]
 
-    userRow = bars[bars["user"] == barSelect]
+        if userRow.empty:
+            print("Username not found. Please try again.")
+            continue
+        else:
+            break
 
-    if userRow.empty:
-        print("Username not found. Please try again.")
-        continue
-    else:
-        break
-
-passwd = userRow["pass"].iloc[0]
-proper = userRow["proper"].iloc[0]
-street = userRow["street"].iloc[0]
-city = userRow["city"].iloc[0]
-inv = userRow["invoicename"].iloc[0]
-price = userRow["price"].iloc[0]
+    passwd = userRow["pass"].iloc[0]
+    proper = userRow["proper"].iloc[0]
+    street = userRow["street"].iloc[0]
+    city = userRow["city"].iloc[0]
+    inv = userRow["invoicename"].iloc[0]
+    price = userRow["price"].iloc[0]
 
 
-nextjs = 'nextItem()'
-savejs = 'saveChanges()'
-saveExit = 'saveAndExit()'
+    nextjs = 'nextItem()'
+    savejs = 'saveChanges()'
+    saveExit = 'saveAndExit()'
 
-dlSummary(barSelect)
-xl_to_csv()
-compare_to_csv()
-Reset()
-
+    Reset()
+    print("Downloading Inventory")
+    dlSummary(barSelect)
+    print("Inventory Dowloaded. Convering to CSV")
+    xl_to_csv()
+    print("Inactivating Unused Items")
+    compare_to_csv()
